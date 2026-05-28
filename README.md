@@ -1,2 +1,0 @@
-# my-cart
-Smart Cart
