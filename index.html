@@ -548,11 +548,11 @@
   .chip-track {
     display: flex;
     flex: 1;
-    gap: 6px;
+    gap: 3px;
     overflow-x: auto;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE 10+ */
-    padding: 2px 0;
+    padding: 1px 0;
   }
 
   .chip-track::-webkit-scrollbar {
@@ -758,7 +758,9 @@
         <textarea id="input-text" placeholder="Example: milk, eggs, chicken, chips, lollies, drinks, cereal, carrots, tomato paste..."></textarea>
         
         <div style="display:flex;align-items:center;margin-top:10px;gap:12px;width:100%;overflow:hidden;">
-          <span class="hotkey-text" style="font-size:11px;color:#7A7268;white-space:nowrap;">CTRL + Enter to add</span>
+            <button class="btn b-ghost b-sm" onclick="openManual()">+ Manual</button>
+            <button class="btn b-pri b-sm" id="ai-btn" onclick="parseItems()">Add Items</button>
+          <span class="hotkey-text" style="font-size:11px;color:#7A7268;white-space:nowrap;">Click Add Items</span>
           
           <div class="chip-track" id="quick-chips"></div>
           
