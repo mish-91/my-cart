@@ -1,2 +1,2 @@
 # my-cart
-Smart Cart v2
+Smart Cart
