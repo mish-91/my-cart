@@ -759,7 +759,7 @@
         
         <div style="display:flex;align-items:center;margin-top:10px;gap:12px;width:100%;overflow:hidden;">
          <div class="chip-track" id="quick-chips"></div>
-         <button class="btn b-ghost b-sm" onclick="openManual()">+ Item</button>
+         <button class="btn b-ghost b-sm" onclick="openManual()">Manual Add</button>
          <button class="btn b-pri b-sm" id="ai-btn" onclick="parseItems()">Add Items</button>
 
         </div>
@@ -1233,7 +1233,7 @@ function removeItem(id) {
 }
 
 // ─── QUICK ADDS STAPLES LOGIC ───
-const STAPLES = ['Milk', 'Eggs', 'Chicken', 'Fruits', 'Yogurt', 'Rice', 'Coffee'];
+const STAPLES = ['Milk', 'Eggs', 'Bread', 'Fruits', 'Snacks'];
 
 function initQuickChips() {
   const container = document.getElementById('quick-chips');
@@ -1517,7 +1517,7 @@ function parseItems() {
     pantry: ['tomato paste','pasta sauce','cooking sauce','soy sauce','bbq sauce','hot sauce','chilli sauce','olive oil','vegetable oil','sesame oil','instant noodles','2 minute noodles','baked beans','kidney beans','black beans','canned tomatoes','crushed tomatoes','peanut butter','almond butter','coffee beans','tea bags','plain flour','brown sugar','caster sugar','breadcrumbs','stock cubes','zaatar','molasses','tahini','pasta','rice','sauce','canned','cereal','oil','spices','flour','sugar','salt','pepper','vinegar','tuna can','beans','lentils','chickpeas','stock','passata','noodles','oats','honey','jam','nutella','coffee','tea','weet bix','nutri grain','milo','vegemite','promite','uncle tobys','maggi','continental','masterfoods'],
     frozen: ['frozen pizza','frozen vegetables','frozen berries','frozen meals','ice cream tub','ice cream cones','hash browns','potato gems','frozen chips','frozen nuggets','frozen chicken','dimsims','dim sims','ice cream','frozen','pizza','nuggets','frozen veg','zooper dooper','drumstick ice cream','connoisseur','ben and jerrys'],
     bakery: ['burger buns','hot dog buns','lebanese bread','sourdough bread','garlic bread','english muffins','wrap bread','croissants','flatbread','bread','rolls','pastries','wraps','sourdough','bagels','muffins','pita','tortillas','naan','toast bread','crumpets','donuts','doughnuts','tip top','helgas','wonder white'],
-    snacks: ['protein bars','muesli bars','corn chips','potato chips','party mix','gummy bears','tim tams','oreo','shapes','pringles','doritos','twisties','cheezels','pods','maltesers','snickers','mars bar','kitkat','chips','lollies','chocolate','candy','biscuits','cookies','nuts','popcorn','crackers','pretzels','ice blocks','smiths','kettle chips','ccs'],
+    snacks: ['protein bars','muesli bars','corn chips','potato chips','party mix','gummy bears','tim tams','oreo','shapes','pringles','doritos','twisties','cheezels','pods','maltesers','snickers','mars bar','kitkat','chips','lollies','chocolate','candy','biscuits','cookies','nuts','popcorn','crackers','pretzels','ice blocks','smiths','kettle chips','ccs','Snacks'],
     drinks: ['sparkling water','mineral water','soft drink','energy drink','iced coffee','iced tea','orange juice','apple juice','coconut water','sports drink','red bull','monster','gatorade','powerade','kombucha','juice','water','coke','sprite','fanta','pepsi','coffee drink','tea drink','drink','drinks','mount franklin','pump water','v energy','lipton'],
     deli: ['turkey slices','deli chicken','cold meats','sliced ham','marinated olives','sun dried tomatoes','hummus dip','tzatziki dip','labneh','pickles','olives','dip','hummus','tzatziki','salami','prosciutto','pepperoni','kabana'],
     other: []
