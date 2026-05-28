@@ -1270,7 +1270,9 @@ function confirmClearStart() {
 
 function clearAll() {
   items = [];
-  save(); render();
+  save(); 
+  initQuickChips(); // This will recreate the chips area
+  render();
   notify('Shopping list cleared');
   cancelClear();
 }
