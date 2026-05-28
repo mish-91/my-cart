@@ -1262,6 +1262,7 @@ function addQuickStaple(item, element) {
 function clearChecked() {
   items = items.filter(i => !i.checked);
   save(); render();
+  initQuickChips();
   notify('Ticked items removed');
 }
 
