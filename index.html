@@ -96,7 +96,7 @@
   .tab{
     flex:1;
     padding:10px 10px;
-    border-radius:999px;
+    border-radius: 999px;
     border:1px solid var(--border);
     background:var(--card);
     font-size:12.5px;
@@ -754,7 +754,7 @@
   <div id="pane-shopping">
     <div class="sec">
       <div class="icard">
-        <div class="ilabel">+ Add items — comma separated</div>
+        <div class="ilabel">Add items — Follow example below or use quick links</div>
         <textarea id="input-text" placeholder="Example: milk, eggs, chicken, chips, lollies, drinks, cereal, carrots, tomato paste..."></textarea>
         
         <div style="display:flex;align-items:center;margin-top:10px;gap:12px;width:100%;overflow:hidden;">
@@ -1239,13 +1239,17 @@ function initQuickChips() {
   const container = document.getElementById('quick-chips');
   if (!container) return;
   container.innerHTML = STAPLES.map(item => 
-    `<button class="qchip" onclick="addQuickStaple('${item}')">+ ${item}</button>`
+    `<button class="qchip" onclick="addQuickStaple('${item}', this)">+ ${item}</button>`
   ).join('');
 }
 
-function addQuickStaple(item) {
+function addQuickStaple(item, element) {
   // Directly parses and adds the chip text to the shopping list
   parseAndAddItems(item);
+  // Remove the chip from the UI so it can't be clicked again
+  if (element) {
+    element.remove();
+  }
 }
 
 function clearChecked() {
