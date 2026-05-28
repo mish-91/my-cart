@@ -96,7 +96,7 @@
   .tab{
     flex:1;
     padding:10px 10px;
-    border-radius:999px;
+    border-radius999px;
     border:1px solid var(--border);
     background:var(--card);
     font-size:12.5px;
@@ -544,6 +544,45 @@
     margin-left:8px;
   }
 
+  /* ─── QUICK CHIPS ─── */
+  .chip-track {
+    display: flex;
+    flex: 1;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 10+ */
+    padding: 2px 0;
+  }
+
+  .chip-track::-webkit-scrollbar {
+    display: none; /* Safari/Chrome */
+  }
+
+  .qchip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s ease;
+  }
+
+  .qchip:hover {
+    background: var(--blue-soft);
+    color: var(--blue);
+    border-color: rgba(59,130,246,0.3);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 540px) {
+    .hotkey-text { display: none !important; }
+  }
+
   /* MODALS */
   .mbg{
     position:fixed;
@@ -717,9 +756,13 @@
       <div class="icard">
         <div class="ilabel">📝 Add items — comma separated</div>
         <textarea id="input-text" placeholder="Example: milk, eggs, chicken, chips, lollies, drinks, cereal, carrots, tomato paste..."></textarea>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px">
-          <span style="font-size:11px;color:#7A7268">CTRL + Enter to add</span>
-          <div style="display:flex;gap:8px">
+        
+        <div style="display:flex;align-items:center;margin-top:10px;gap:12px;width:100%;overflow:hidden;">
+          <span class="hotkey-text" style="font-size:11px;color:#7A7268;white-space:nowrap;">CTRL + Enter to add</span>
+          
+          <div class="chip-track" id="quick-chips"></div>
+          
+          <div style="display:flex;gap:8px;flex-shrink:0;">
             <button class="btn b-ghost b-sm" onclick="openManual()">+ Manual</button>
             <button class="btn b-pri b-sm" id="ai-btn" onclick="parseItems()">Add Items</button>
           </div>
@@ -834,8 +877,8 @@
       <div class="ff" style="flex:1">
         <div class="fl">Status</div>
         <select id="pantry-status" onchange="togglePantryOpenedDate(this.value)">
-          <option value="opened">Opened (In Use)</option>
-          <option value="unopened">Unopened (Stockpile)</option>
+          <option value="opened">Opened</option>
+          <option value="unopened">Unopened</option>
         </select>
       </div>
       <div class="ff" style="flex:1; margin-left:12px;" id="pantry-opened-container">
@@ -1193,6 +1236,31 @@ function removeItem(id) {
   save(); render();
 }
 
+// ─── QUICK ADDS STAPLES LOGIC ───
+const STAPLES = ['Milk', 'Eggs', 'Chicken', 'Bananas', 'Yogurt', 'Rice', 'Coffee', 'Chips'];
+
+function initQuickChips() {
+  const container = document.getElementById('quick-chips');
+  if (!container) return;
+  container.innerHTML = STAPLES.map(item => 
+    `<button class="qchip" onclick="addQuickStaple('${item}')">+ ${item}</button>`
+  ).join('');
+}
+
+function addQuickStaple(item) {
+  const input = document.getElementById('input-text');
+  const val = input.value.trim();
+  
+  if (val.length > 0 && !val.endsWith(',')) {
+    input.value = val + ', ' + item + ', ';
+  } else if (val.endsWith(',')) {
+    input.value = val + ' ' + item + ', ';
+  } else {
+    input.value += item + ', ';
+  }
+  input.focus();
+}
+
 function clearChecked() {
   items = items.filter(i => !i.checked);
   save(); render();
@@ -1351,6 +1419,7 @@ function openEditItem(id) {
   setTimeout(() => document.getElementById('edit-name').focus(), 50);
 }
 
+// ─── Pantry modal & logic ─────────────────────────────────────────────
 function closeEditItem() {
   document.getElementById('modal-edit').classList.add('hidden');
   editingItemId = null;
@@ -1367,7 +1436,6 @@ function saveEditedItem() {
   notify('✓ Item updated');
 }
 
-// ─── Pantry modal & logic ─────────────────────────────────────────────
 function togglePantryOpenedDate(val) {
   const container = document.getElementById('pantry-opened-container');
   if (val === 'unopened') {
@@ -1530,7 +1598,7 @@ function escAttr(s) { return escHtml(s); }
   });
 })();
 
-save(); loadSharedList(); render();
+initQuickChips(); loadSharedList(); render();
 </script>
 </body>
 </html>
