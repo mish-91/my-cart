@@ -1245,7 +1245,9 @@ const STAPLES = ['Milk', 'Eggs', 'Bread', 'Fruits', 'Snacks', 'Bananas', 'Yoghur
 function initQuickChips() {
   const container = document.getElementById('quick-chips');
   if (!container) return;
-  container.innerHTML = STAPLES.map(item => 
+  const inList = new Set(items.map(i => i.name.toLowerCase()));
+  const available = STAPLES.filter(s => !inList.has(s.toLowerCase()));
+  container.innerHTML = available.map(item => 
     `<button class="qchip" onclick="addQuickStaple('${item}', this)">+ ${item}</button>`
   ).join('');
 }
