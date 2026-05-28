@@ -188,6 +188,31 @@
     line-height:1.5;
   }
 
+  /* SMART CHIPS */
+  .smart-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .chip {
+    white-space: nowrap;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  .chip:hover {
+    border-color: #111827;
+    background: #fff;
+  }
+  .chip:active {
+    transform: scale(0.96);
+  }
+
   /* BUTTONS */
   .btn{
     display:inline-flex;
@@ -715,13 +740,26 @@
   <div id="pane-shopping">
     <div class="sec">
       <div class="icard">
-        <div class="ilabel">📝 Add items — comma separated</div>
-        <textarea id="input-text" placeholder="Example: milk, eggs, chicken, chips, lollies, drinks, cereal, carrots, tomato paste..."></textarea>
+        <div class="ilabel">🛒 Quick Add Item</div>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="rapid-input" placeholder="Type item (e.g. 2x Milk, Apples, Bread) and press Enter..." onkeydown="handleRapidEnter(event)" style="flex: 1;" />
+          <button class="btn b-pri b-sm" onclick="parseItems()">Add</button>
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px">
-          <span style="font-size:11px;color:#7A7268">CTRL + Enter to add</span>
-          <div style="display:flex;gap:8px">
-            <button class="btn b-ghost b-sm" onclick="openManual()">+ Manual</button>
-            <button class="btn b-pri b-sm" id="ai-btn" onclick="parseItems()">Add Items</button>
+          <span style="font-size:11px;color:#7A7268">Press Enter or click Add</span>
+          <button class="btn b-ghost b-sm" onclick="openManual()">+ Advanced Manual</button>
+        </div>
+        
+        <!-- Quick Add Smart Chips -->
+        <div style="margin-top: 14px;">
+          <div class="ilabel" style="margin-bottom: 6px; font-size: 10px;">⚡ Staples Quick-Tap</div>
+          <div class="smart-chips" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none;">
+            <button class="chip" onclick="pushChipItem('Milk', 'dairy')">🥛 Milk</button>
+            <button class="chip" onclick="pushChipItem('Eggs', 'dairy')">🥚 Eggs</button>
+            <button class="chip" onclick="pushChipItem('Bread', 'bakery')">🍞 Bread</button>
+            <button class="chip" onclick="pushChipItem('Bananas', 'produce')">🍌 Bananas</button>
+            <button class="chip" onclick="pushChipItem('Chicken', 'meat')">🥩 Chicken</button>
+            <button class="chip" onclick="pushChipItem('Chips', 'snacks')">🍬 Chips</button>
           </div>
         </div>
       </div>
@@ -904,10 +942,23 @@ const CATEGORIES = [
   { id:'other',    label:'Other',                    icon:'🛒', cold:false, order:10 },
 ];
 
+const KEYWORDS = {
+  dairy: ['greek yogurt','cream cheese','sour cream','thickened cream','whipping cream','custard','mozzarella','parmesan','ricotta','halloumi','feta','cheddar','tasty cheese','goat cheese','milk','cheese','yogurt','yoghurt','butter','cream','eggs','dairy','lactose','yakult','activia','vaalia','chobani','dairy farmers','bega','a2 milk','oat milk','almond milk','soy milk','lactose free milk'],
+  meat: ['chicken breast','chicken thigh','beef mince','lamb chops','pork belly','beef sausages','burger patties','chicken wings','drumsticks','beef steak','rib eye','scotch fillet','salmon fillet','tuna steaks','fish fillets','chicken','beef','pork','fish','mince','prawns','steak','lamb','turkey','sausages','salmon','tuna','bacon','meatballs','kebab','kafta','shawarma','veal','prosciutto','pepperoni','ham slices'],
+  produce: ['sweet potato','spring onion','green onion','baby spinach','iceberg lettuce','cos lettuce','red onion','brown onion','cherry tomatoes','fresh herbs','fresh parsley','fresh mint','apple','banana','lettuce','tomato','carrot','onion','potato','broccoli','capsicum','pepper','cucumber','berries','strawberries','blueberries','raspberries','spinach','rocket','mint','parsley','coriander','garlic','ginger','avocado','lemons','limes','oranges','grapes','mushrooms','zucchini','eggplant','herbs','celery','watermelon','melon','pear','kiwi','mango','pineapple','beetroot','cabbage','cauliflower'],
+  pantry: ['tomato paste','pasta sauce','cooking sauce','soy sauce','bbq sauce','hot sauce','chilli sauce','olive oil','vegetable oil','sesame oil','instant noodles','2 minute noodles','baked beans','kidney beans','black beans','canned tomatoes','crushed tomatoes','peanut butter','almond butter','coffee beans','tea bags','plain flour','brown sugar','caster sugar','breadcrumbs','stock cubes','zaatar','molasses','tahini','pasta','rice','sauce','canned','cereal','oil','spices','flour','sugar','salt','pepper','vinegar','tuna can','beans','lentils','chickpeas','stock','passata','noodles','oats','honey','jam','nutella','coffee','tea','weet bix','nutri grain','milo','vegemite','promite','uncle tobys','maggi','continental','masterfoods'],
+  frozen: ['frozen pizza','frozen vegetables','frozen berries','frozen meals','ice cream tub','ice cream cones','hash browns','potato gems','frozen chips','frozen nuggets','frozen chicken','dimsims','dim sims','ice cream','frozen','pizza','nuggets','frozen veg','zooper dooper','drumstick ice cream','connoisseur','ben and jerrys'],
+  bakery: ['burger buns','hot dog buns','lebanese bread','sourdough bread','garlic bread','english muffins','wrap bread','croissants','flatbread','bread','rolls','pastries','wraps','sourdough','bagels','muffins','pita','tortillas','naan','toast bread','crumpets','donuts','doughnuts','tip top','helgas','wonder white'],
+  snacks: ['protein bars','muesli bars','corn chips','potato chips','party mix','gummy bears','tim tams','oreo','shapes','pringles','doritos','twisties','cheezels','pods','maltesers','snickers','mars bar','kitkat','chips','lollies','chocolate','candy','biscuits','cookies','nuts','popcorn','crackers','pretzels','ice blocks','smiths','kettle chips','ccs'],
+  drinks: ['sparkling water','mineral water','soft drink','energy drink','iced coffee','iced tea','orange juice','apple juice','coconut water','sports drink','red bull','monster','gatorade','powerade','kombucha','juice','water','coke','sprite','fanta','pepsi','coffee drink','tea drink','drink','drinks','mount franklin','pump water','v energy','lipton'],
+  deli: ['turkey slices','deli chicken','cold meats','sliced ham','marinated olives','sun dried tomatoes','hummus dip','tzatziki dip','labneh','pickles','olives','dip','hummus','tzatziki','salami','prosciutto','pepperoni','kabana'],
+  other: []
+};
+
 function uuid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
 // ─── State ────────────────────────────────────────────────────────────
-let items       = []; 
+let items       = JSON.parse(localStorage.getItem('ss_items')       || '[]'); 
 let pantry      = JSON.parse(localStorage.getItem('ss_pantry')      || '[]');
 let savedLists  = JSON.parse(localStorage.getItem('ss_saved_lists') || '[]');
 let currentTab  = 'shopping';
@@ -1280,6 +1331,27 @@ function closeLoadModal() {
   pendingLoadId = null;
 }
 
+// ─── Rapid Add & Smart Chips Input Logic ───────────────────────────────
+function handleRapidEnter(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    parseItems();
+  }
+}
+
+function pushChipItem(name, category) {
+  const existingItemIndex = items.findIndex(i => i.name.toLowerCase() === name.toLowerCase());
+  if (existingItemIndex > -1) {
+    items[existingItemIndex].qty += 1;
+    items[existingItemIndex].checked = false;
+  } else {
+    items.push({ id: uuid(), name, category, qty: 1, checked: false });
+  }
+  save();
+  render();
+  notify(`✓ Added ${name}`);
+}
+
 function doLoadReplace() {
   if (!pendingLoadId) return;
   const sl = savedLists.find(s => s.id === pendingLoadId);
@@ -1400,6 +1472,44 @@ function openPantryForm(prefill = {}) {
   document.getElementById('modal-pantry').classList.remove('hidden');
 }
 
+// ─── AI: parse shopping text ───────────────────────────────────────────
+function parseItems() {
+  const inputEl = document.getElementById('rapid-input');
+  const inputText = inputEl.value.trim();
+  if (!inputText) return;
+
+  const rawItems = inputText.split(/[,;\n]| and /i).map(s => s.trim()).filter(Boolean);
+
+  const parsedItems = rawItems.map(raw => {
+    let working = raw.toLowerCase();
+    let qty = 1;
+    const qtyPatterns = [/x\s?(\d+)/i, /(\d+)\s?x/i, /qty\s?(\d+)/i, /pack\s?of\s?(\d+)/i];
+    qtyPatterns.forEach(p => {
+      const match = working.match(p); if (match) qty = parseInt(match[1]) || 1;
+    });
+    working = working.replace(/x\s?\d+/gi,'').replace(/\d+\s?x/gi,'').replace(/qty\s?\d+/gi,'').replace(/pack\s?of\s?\d+/gi,'').trim();
+
+    let category = 'other'; const allMatches = [];
+    for (const [cat, kws] of Object.entries(KEYWORDS)) {
+      kws.forEach(kw => { if (working.includes(kw)) allMatches.push({ category: cat, keyword: kw, length: kw.length }); });
+    }
+    if (allMatches.length > 0) { allMatches.sort((a, b) => b.length - a.length); category = allMatches[0].category; }
+    const cleanName = working.replace(/\s+/g,' ').trim().replace(/\b\w/g, c => c.toUpperCase());
+    return { id: uuid(), name: cleanName, category, qty, checked: false };
+  }).filter(i => i.name);
+
+  parsedItems.forEach(newItem => {
+    const existingItemIndex = items.findIndex(i => i.name.toLowerCase() === newItem.name.toLowerCase());
+    if (existingItemIndex > -1) { items[existingItemIndex].qty += newItem.qty; items[existingItemIndex].checked = false; }
+    else { items.push(newItem); }
+  });
+
+  inputEl.value = '';
+  inputEl.focus();
+  save(); render();
+  notify(`✓ Added item${parsedItems.length !== 1 ? 's' : ''}`);
+}
+
 function closePantryForm() { document.getElementById('modal-pantry').classList.add('hidden'); }
 
 function savePantryItem() {
@@ -1441,55 +1551,6 @@ function getDaysLeft(item) {
   return Math.ceil((exp - Date.now()) / 86400000);
 }
 
-// ─── AI: parse shopping text ───────────────────────────────────────────
-function parseItems() {
-  const inputText = document.getElementById('input-text').value.trim();
-  if (!inputText) return;
-
-  const keywords = {
-    dairy: ['greek yogurt','cream cheese','sour cream','thickened cream','whipping cream','custard','mozzarella','parmesan','ricotta','halloumi','feta','cheddar','tasty cheese','goat cheese','milk','cheese','yogurt','yoghurt','butter','cream','eggs','dairy','lactose','yakult','activia','vaalia','chobani','dairy farmers','bega','a2 milk','oat milk','almond milk','soy milk','lactose free milk'],
-    meat: ['chicken breast','chicken thigh','beef mince','lamb chops','pork belly','beef sausages','burger patties','chicken wings','drumsticks','beef steak','rib eye','scotch fillet','salmon fillet','tuna steaks','fish fillets','chicken','beef','pork','fish','mince','prawns','steak','lamb','turkey','sausages','salmon','tuna','bacon','meatballs','kebab','kafta','shawarma','veal','prosciutto','pepperoni','ham slices'],
-    produce: ['sweet potato','spring onion','green onion','baby spinach','iceberg lettuce','cos lettuce','red onion','brown onion','cherry tomatoes','fresh herbs','fresh parsley','fresh mint','apple','banana','lettuce','tomato','carrot','onion','potato','broccoli','capsicum','pepper','cucumber','berries','strawberries','blueberries','raspberries','spinach','rocket','mint','parsley','coriander','garlic','ginger','avocado','lemons','limes','oranges','grapes','mushrooms','zucchini','eggplant','herbs','celery','watermelon','melon','pear','kiwi','mango','pineapple','beetroot','cabbage','cauliflower'],
-    pantry: ['tomato paste','pasta sauce','cooking sauce','soy sauce','bbq sauce','hot sauce','chilli sauce','olive oil','vegetable oil','sesame oil','instant noodles','2 minute noodles','baked beans','kidney beans','black beans','canned tomatoes','crushed tomatoes','peanut butter','almond butter','coffee beans','tea bags','plain flour','brown sugar','caster sugar','breadcrumbs','stock cubes','zaatar','molasses','tahini','pasta','rice','sauce','canned','cereal','oil','spices','flour','sugar','salt','pepper','vinegar','tuna can','beans','lentils','chickpeas','stock','passata','noodles','oats','honey','jam','nutella','coffee','tea','weet bix','nutri grain','milo','vegemite','promite','uncle tobys','maggi','continental','masterfoods'],
-    frozen: ['frozen pizza','frozen vegetables','frozen berries','frozen meals','ice cream tub','ice cream cones','hash browns','potato gems','frozen chips','frozen nuggets','frozen chicken','dimsims','dim sims','ice cream','frozen','pizza','nuggets','frozen veg','zooper dooper','drumstick ice cream','connoisseur','ben and jerrys'],
-    bakery: ['burger buns','hot dog buns','lebanese bread','sourdough bread','garlic bread','english muffins','wrap bread','croissants','flatbread','bread','rolls','pastries','wraps','sourdough','bagels','muffins','pita','tortillas','naan','toast bread','crumpets','donuts','doughnuts','tip top','helgas','wonder white'],
-    snacks: ['protein bars','muesli bars','corn chips','potato chips','party mix','gummy bears','tim tams','oreo','shapes','pringles','doritos','twisties','cheezels','pods','maltesers','snickers','mars bar','kitkat','chips','lollies','chocolate','candy','biscuits','cookies','nuts','popcorn','crackers','pretzels','ice blocks','smiths','kettle chips','ccs'],
-    drinks: ['sparkling water','mineral water','soft drink','energy drink','iced coffee','iced tea','orange juice','apple juice','coconut water','sports drink','red bull','monster','gatorade','powerade','kombucha','juice','water','coke','sprite','fanta','pepsi','coffee drink','tea drink','drink','drinks','mount franklin','pump water','v energy','lipton'],
-    deli: ['turkey slices','deli chicken','cold meats','sliced ham','marinated olives','sun dried tomatoes','hummus dip','tzatziki dip','labneh','pickles','olives','dip','hummus','tzatziki','salami','prosciutto','pepperoni','kabana'],
-    other: []
-  };
-
-  const rawItems = inputText.split(/[,;\n]| and /i).map(s => s.trim()).filter(Boolean);
-
-  const parsedItems = rawItems.map(raw => {
-    let working = raw.toLowerCase();
-    let qty = 1;
-    const qtyPatterns = [/x\s?(\d+)/i, /(\d+)\s?x/i, /qty\s?(\d+)/i, /pack\s?of\s?(\d+)/i];
-    qtyPatterns.forEach(p => {
-      const match = working.match(p); if (match) qty = parseInt(match[1]) || 1;
-    });
-    working = working.replace(/x\s?\d+/gi,'').replace(/\d+\s?x/gi,'').replace(/qty\s?\d+/gi,'').replace(/pack\s?of\s?\d+/gi,'').trim();
-
-    let category = 'other'; const allMatches = [];
-    for (const [cat, kws] of Object.entries(keywords)) {
-      kws.forEach(kw => { if (working.includes(kw)) allMatches.push({ category: cat, keyword: kw, length: kw.length }); });
-    }
-    if (allMatches.length > 0) { allMatches.sort((a, b) => b.length - a.length); category = allMatches[0].category; }
-    const cleanName = working.replace(/\s+/g,' ').trim().replace(/\b\w/g, c => c.toUpperCase());
-    return { id: uuid(), name: cleanName, category, qty, checked: false };
-  }).filter(i => i.name);
-
-  parsedItems.forEach(newItem => {
-    const existingItemIndex = items.findIndex(i => i.name.toLowerCase() === newItem.name.toLowerCase());
-    if (existingItemIndex > -1) { items[existingItemIndex].qty += newItem.qty; items[existingItemIndex].checked = false; }
-    else { items.push(newItem); }
-  });
-
-  document.getElementById('input-text').value = '';
-  save(); render();
-  notify(`✓ ${parsedItems.length} item${parsedItems.length !== 1 ? 's' : ''} added`);
-}
-
 // ─── Share ────────────────────────────────────────────────────────────
 function shareSavedList(savedId) {
   const sl = savedLists.find(s => s.id === savedId);
@@ -1511,10 +1572,6 @@ function loadSharedList() {
     } catch(e) { console.error('Failed to load shared list:', e); }
   }
 }
-
-document.getElementById('input-text').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) parseItems();
-});
 
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return escHtml(s); }
