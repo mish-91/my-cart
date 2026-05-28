@@ -321,6 +321,7 @@
     padding:12px;
     margin-bottom:6px;
     transition:all .15s;
+    cursor: pointer;
   }
 
   .irow.cold{
@@ -338,7 +339,6 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    cursor:pointer;
   }
 
   .chk.on{
@@ -1027,8 +1027,15 @@ function renderShopping() {
     g.items.forEach(item => {
       const row = document.createElement('div');
       row.className = `irow ${g.cold ? 'cold' : ''} ${item.checked ? 'done' : ''}`;
+      
+      // Make the whole row clickable, but exclude the edit/delete buttons
+      row.onclick = (e) => {
+        if (e.target.closest('.iactions')) return;
+        toggleItem(item.id);
+      };
+      
       row.innerHTML = `
-        <div class="chk ${item.checked ? 'on' : ''}" onclick="toggleItem('${item.id}')">
+        <div class="chk ${item.checked ? 'on' : ''}">
           ${item.checked ? `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="1,6 5,10 11,2"/></svg>` : ''}
         </div>
         <span class="iname">${escHtml(item.name)}</span>
