@@ -756,11 +756,15 @@
       <div class="icard">
         <div class="ilabel">📝 Add items — comma separated</div>
         <textarea id="input-text" placeholder="Example: milk, eggs, chicken, chips, lollies, drinks, cereal, carrots, tomato paste..."></textarea>
-     
+        
+        <div style="display:flex;align-items:center;margin-top:10px;gap:12px;width:100%;overflow:hidden;">
+          <span class="hotkey-text" style="font-size:11px;color:#7A7268;white-space:nowrap;">CTRL + Enter to add</span>
+          
           <div class="chip-track" id="quick-chips"></div>
           
-          <div style="display:flex;gap:10px;flex-shrink:0;">
+          <div style="display:flex;gap:8px;flex-shrink:0;">
             <button class="btn b-ghost b-sm" onclick="openManual()">+ Manual</button>
+            <button class="btn b-pri b-sm" id="ai-btn" onclick="parseItems()">Add Items</button>
           </div>
         </div>
       </div>
@@ -1233,7 +1237,7 @@ function removeItem(id) {
 }
 
 // ─── QUICK ADDS STAPLES LOGIC ───
-const STAPLES = ['Milk', 'Eggs', 'Chicken', 'Fruit', 'Yogurt', 'Rice', 'Coffee'];
+const STAPLES = ['Milk', 'Eggs', 'Chicken', 'Bananas', 'Yogurt', 'Rice', 'Coffee', 'Chips'];
 
 function initQuickChips() {
   const container = document.getElementById('quick-chips');
