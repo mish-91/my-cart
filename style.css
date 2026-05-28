@@ -21,7 +21,10 @@
   }
 
   body{
-    background:var(--bg);
+  background:var(--bg);
+  margin:0;
+  padding:0;
+}
   }
 
   .app{
