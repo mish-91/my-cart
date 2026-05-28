@@ -754,7 +754,7 @@
   <div id="pane-shopping">
     <div class="sec">
       <div class="icard">
-        <div class="ilabel">📝 Add items — comma separated</div>
+        <div class="ilabel">+ Add items — comma separated</div>
         <textarea id="input-text" placeholder="Example: milk, eggs, chicken, chips, lollies, drinks, cereal, carrots, tomato paste..."></textarea>
         
         <div style="display:flex;align-items:center;margin-top:10px;gap:12px;width:100%;overflow:hidden;">
@@ -1244,17 +1244,8 @@ function initQuickChips() {
 }
 
 function addQuickStaple(item) {
-  const input = document.getElementById('input-text');
-  const val = input.value.trim();
-  
-  if (val.length > 0 && !val.endsWith(',')) {
-    input.value = val + ', ' + item + ', ';
-  } else if (val.endsWith(',')) {
-    input.value = val + ' ' + item + ', ';
-  } else {
-    input.value += item + ', ';
-  }
-  input.focus();
+  // Directly parses and adds the chip text to the shopping list
+  parseAndAddItems(item);
 }
 
 function clearChecked() {
@@ -1506,8 +1497,9 @@ function getDaysLeft(item) {
 }
 
 // ─── AI: parse shopping text ───────────────────────────────────────────
-function parseItems() {
-  const inputText = document.getElementById('input-text').value.trim();
+
+// Reusable function to parse text and add right to the list (used by both input area and quick chips)
+function parseAndAddItems(inputText) {
   if (!inputText) return;
 
   const keywords = {
@@ -1549,9 +1541,18 @@ function parseItems() {
     else { items.push(newItem); }
   });
 
-  document.getElementById('input-text').value = '';
   save(); render();
   notify(`✓ ${parsedItems.length} item${parsedItems.length !== 1 ? 's' : ''} added`);
+}
+
+// Called by the text area's Add button
+function parseItems() {
+  const inputEl = document.getElementById('input-text');
+  const inputText = inputEl.value.trim();
+  if (!inputText) return;
+  
+  parseAndAddItems(inputText);
+  inputEl.value = ''; // clear text box only here
 }
 
 // ─── Share ────────────────────────────────────────────────────────────
