@@ -7,15 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="style.css" />
-
 </head>
 <body>
 <div class="app">
 
   <div class="hdr">
     <h1>Smart Shopper</h1>
+    <button id="logout-btn" class="b-ghost b-sm" style="position:absolute; top:20px; right:20px; color:#fff; border-color:rgba(255,255,255,0.2);">Log Out</button>
   </div>
 
   <div class="tabs">
@@ -42,7 +41,6 @@
          <div class="chip-track" id="quick-chips"></div>
          <button class="btn b-ghost b-sm" onclick="openManual()">Manual Add</button>
          <button class="btn b-pri b-sm" id="ai-btn" onclick="parseItems()">Add Items</button>
-
         </div>
       </div>
     </div>
@@ -146,12 +144,10 @@
 <div class="mbg hidden" id="modal-pantry" onclick="closePantryForm()">
   <div class="mdl" onclick="event.stopPropagation()">
     <div class="mtitle" id="pantry-modal-title">Track Pantry Item</div>
-
     <div class="ff">
       <div class="fl">Product Name</div>
       <input type="text" id="pantry-name" placeholder="e.g. Minced Garlic" />
     </div>
-    
     <div class="frow" style="display:flex;">
       <div class="ff" style="flex:1">
         <div class="fl">Status</div>
@@ -165,7 +161,6 @@
         <input type="date" id="pantry-opened" />
       </div>
     </div>
-    
     <div class="ff">
       <div class="fl">Use Within (days after opening)</div>
       <input type="number" id="pantry-days" min="1" placeholder="e.g. 5" />
@@ -212,7 +207,6 @@
 <div class="toast hidden" id="toast"></div>
 
 <script>
-// ─── Data ────────────────────────────────────────────────────────────
 const CATEGORIES = [
   { id:'bakery',   label:'Bakery',                   icon:'🍞', cold:false, order:1  },
   { id:'pantry',   label:'Pantry & Canned',           icon:'🥫', cold:false, order:2  },
@@ -228,7 +222,6 @@ const CATEGORIES = [
 
 function uuid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
-// ─── State ────────────────────────────────────────────────────────────
 let items       = []; 
 let pantry      = JSON.parse(localStorage.getItem('ss_pantry')      || '[]');
 let savedLists  = JSON.parse(localStorage.getItem('ss_saved_lists') || '[]');
@@ -237,15 +230,13 @@ let toastTimer  = null;
 let editingItemId  = null;
 let pendingLoadId  = null;   
 
-// ─── Persist ───────────────────────────────────────────────────────────
 function save() {
   localStorage.setItem('ss_items',       JSON.stringify(items));
   localStorage.setItem('ss_pantry',      JSON.stringify(pantry));
   localStorage.setItem('ss_saved_lists', JSON.stringify(savedLists));
 }
 
-// ─── Toast ────────────────────────────────────────────────────────────
-function notify(msg, type = 'ok') {
+window.notify = function(msg, type = 'ok') {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className = 'toast' + (type === 'err' ? ' err' : '');
@@ -253,7 +244,6 @@ function notify(msg, type = 'ok') {
   toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
 }
 
-// ─── Tab switching ────────────────────────────────────────────────────
 function switchTab(t) {
   currentTab = t;
   document.getElementById('pane-shopping').classList.toggle('hidden', t !== 'shopping');
@@ -265,7 +255,6 @@ function switchTab(t) {
   render();
 }
 
-// ─── Render ────────────────────────────────────────────────────────────
 function render() {
   renderShopping();
   renderPantry();
@@ -340,7 +329,6 @@ function buildGrouped() {
     .filter(g => g.items.length > 0);
 }
 
-// ─── Render saved lists ────────────────────────────────────────────────
 function renderSavedLists() {
   const container = document.getElementById('saved-lists-container');
   container.innerHTML = '';
@@ -391,7 +379,6 @@ function renderSavedLists() {
   });
 }
 
-// ─── Render pantry ─────────────────────────────────────────────────────
 function renderPantry() {
   const unopenedItems = pantry.filter(i => i.isOpened === false);
   const openedItems   = pantry.filter(i => i.isOpened !== false); 
@@ -510,7 +497,6 @@ function renderBadges() {
   else savedBadge.classList.add('hidden');
 }
 
-// ─── Shopping actions ──────────────────────────────────────────────────
 function toggleItem(id) {
   items = items.map(i => i.id === id ? { ...i, checked: !i.checked } : i);
   save(); render();
@@ -570,7 +556,6 @@ function cancelClear() {
   document.getElementById('clear-area').innerHTML = `<button class="btn b-ghost b-sm" onclick="confirmClearStart()">🗑 Clear list</button>`;
 }
 
-// ─── Save List ─────────────────────────────────────────────────────────
 function openSaveModal() {
   if (items.length === 0) { notify('Add some items first', 'err'); return; }
 
@@ -589,7 +574,6 @@ function openSaveModal() {
   }, 80);
 }
 
-// ─── Load List ─────────────────────────────────────────────────────────
 function closeSaveModal() { document.getElementById('modal-save').classList.add('hidden'); }
 function saveListEnter(e) { if (e.key === 'Enter') confirmSaveList(); }
 
@@ -666,7 +650,6 @@ function deleteSavedList(savedId) {
   notify('Saved list deleted');
 }
 
-// ─── Manual modal ──────────────────────────────────────────────────────
 function openManual() {
   document.getElementById('manual-name').value = '';
   document.getElementById('manual-qty').value  = 1;
@@ -689,7 +672,6 @@ function addManual() {
   save(); render(); closeManual();
 }
 
-// ─── Edit item modal ───────────────────────────────────────────────────
 function openEditItem(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
@@ -701,7 +683,6 @@ function openEditItem(id) {
   setTimeout(() => document.getElementById('edit-name').focus(), 50);
 }
 
-// ─── Pantry modal & logic ─────────────────────────────────────────────
 function closeEditItem() {
   document.getElementById('modal-edit').classList.add('hidden');
   editingItemId = null;
@@ -791,8 +772,6 @@ function getDaysLeft(item) {
   return Math.ceil((exp - Date.now()) / 86400000);
 }
 
-// ─── AI: parse shopping text ───────────────────────────────────────────
-
 function parseAndAddItems(inputText) {
   if (!inputText) return;
 
@@ -848,7 +827,6 @@ function parseItems() {
   inputEl.value = ''; 
 }
 
-// ─── Share ────────────────────────────────────────────────────────────
 function shareSavedList(savedId) {
   const sl = savedLists.find(s => s.id === savedId);
   if (!sl) return;
@@ -889,6 +867,39 @@ function escAttr(s) { return escHtml(s); }
 })();
 
 initQuickChips(); loadSharedList(); render();
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+  // TODO: Replace this with your actual app's Firebase project configuration
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Logout logic
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      signOut(auth).then(() => {
+        // Redirect back to the login page (index.html)
+        window.location.href = 'index.html';
+      }).catch((error) => {
+        console.error("Logout failed:", error);
+        if(window.notify) window.notify('Could not log out', 'err');
+      });
+    });
+  }
 </script>
 </body>
 </html>
