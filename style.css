@@ -21,13 +21,12 @@
 
 body {
   background: var(--bg);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+  color: var(--text);
 }
 
 .app {
   min-height: 100vh;
-  background: var(--bg);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
-  color: var(--text);
   max-width: 640px;
   margin: 0 auto;
   padding-bottom: 120px;
@@ -725,7 +724,7 @@ textarea {
   justify-content: center;
   min-height: 100vh;
   padding: 24px;
-  background: #0F172A;
+  background: var(--bg);
 }
 
 .login-card {
