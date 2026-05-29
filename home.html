@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Shopper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css" />
+
+</head>
+<body>
+<div class="app">
+
+  <div class="hdr">
+    <h1>Smart Shopper</h1>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" id="tab-shopping" onclick="switchTab('shopping')">
+      Shopping List <span class="bdg hidden" id="unchecked-badge"></span>
+    </button>
+    <button class="tab" id="tab-pantry" onclick="switchTab('pantry')">
+      Pantry
+      <span class="bdg red hidden" id="pantry-exp-badge"></span>
+      <span class="bdg hidden" id="pantry-soon-badge"></span>
+    </button>
+    <button class="tab" id="tab-saved" onclick="switchTab('saved')">
+      Saved Lists <span class="bdg grn hidden" id="saved-badge"></span>
+    </button>
+  </div>
+
+  <div id="pane-shopping">
+    <div class="sec">
+      <div class="icard">
+        <div class="ilabel">Follow example below or use quick links</div>
+        <textarea id="input-text" placeholder="Example: milk, eggs, chicken, chips, lollies, drinks, cereal, carrots, tomato paste..."></textarea>
+        
+        <div style="display:flex;align-items:center;margin-top:10px;gap:12px;width:100%;overflow:hidden;">
+         <div class="chip-track" id="quick-chips"></div>
+         <button class="btn b-ghost b-sm" onclick="openManual()">Manual Add</button>
+         <button class="btn b-pri b-sm" id="ai-btn" onclick="parseItems()">Add Items</button>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="sec hidden" id="list-meta">
+      <div class="prog"><div class="progf" id="prog-fill" style="width:0%"></div></div>
+      <div class="progl">
+        <span id="prog-label">0 of 0 collected</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px">
+        <div id="clear-area">
+          <button class="btn b-ghost b-sm" onclick="confirmClearStart()">🗑 Clear list</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn b-ghost b-sm hidden" id="clear-ticked-btn" onclick="clearChecked()">✓ Clear ticked</button>
+          <button class="btn b-sm" style="background:#064E3B;color:#fff" onclick="openSaveModal()">💾 Save List</button>
+        </div>
+      </div>
+      <div class="cold-tip hidden" id="cold-tip">
+        ❄️ <strong>Cold &amp; Frozen items are listed last so they dont spoil</strong>
+      </div>
+    </div>
+
+    <div class="sec" id="items-list">
+      <div class="empty" id="empty-shop">
+        <div class="empty-ico">🛒</div>
+        <h3>List is empty</h3>
+      </div>
+    </div>
+  </div>
+
+  <div id="pane-pantry" class="hidden">
+    <div class="sec">
+      <button class="btn b-pri" style="width:100%;justify-content:center" onclick="openPantryForm()">+ Track Pantry Item</button>
+    </div>
+    <div class="sec" id="pantry-list">
+      <div class="empty" id="empty-pantry">
+        <h3>Nothing Tracked</h3>
+        <p>Add opened items to track used by date.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="pane-saved" class="hidden">
+    <div class="sec">
+      <div id="saved-lists-container"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="mbg hidden" id="modal-manual" onclick="closeManual()">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mtitle">Add Item Manually</div>
+    <div class="ff">
+      <div class="fl">Item Name</div>
+      <input type="text" id="manual-name" placeholder="e.g. Sourdough Bread" onkeydown="manualEnter(event)" />
+    </div>
+    <div class="frow" style="display:flex;">
+      <div class="ff" style="flex:1">
+        <div class="fl">Category</div>
+        <select id="manual-cat"></select>
+      </div>
+      <div class="ff" style="width:100px; margin-left:12px;">
+        <div class="fl">Qty</div>
+        <input type="number" id="manual-qty" value="1" min="1" />
+      </div>
+    </div>
+    <div class="row-end" style="display:flex">
+      <button class="btn b-ghost" onclick="closeManual()">Cancel</button>
+      <button class="btn b-pri" onclick="addManual()">Add to List</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg hidden" id="modal-edit" onclick="closeEditItem()">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mtitle">Edit Item</div>
+    <div class="ff">
+      <div class="fl">Item Name</div>
+      <input type="text" id="edit-name" placeholder="Item name" />
+    </div>
+    <div class="frow" style="display:flex;">
+      <div class="ff" style="flex:1">
+        <div class="fl">Category</div>
+        <select id="edit-cat"></select>
+      </div>
+      <div class="ff" style="width:100px; margin-left:12px;">
+        <div class="fl">Qty</div>
+        <input type="number" id="edit-qty" value="1" min="1" />
+      </div>
+    </div>
+    <div class="row-end" style="display:flex">
+      <button class="btn b-ghost" onclick="closeEditItem()">Cancel</button>
+      <button class="btn b-pri" onclick="saveEditedItem()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg hidden" id="modal-pantry" onclick="closePantryForm()">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mtitle" id="pantry-modal-title">Track Pantry Item</div>
+
+    <div class="ff">
+      <div class="fl">Product Name</div>
+      <input type="text" id="pantry-name" placeholder="e.g. Minced Garlic" />
+    </div>
+    
+    <div class="frow" style="display:flex;">
+      <div class="ff" style="flex:1">
+        <div class="fl">Status</div>
+        <select id="pantry-status" onchange="togglePantryOpenedDate(this.value)">
+          <option value="opened">Opened</option>
+          <option value="unopened">Unopened</option>
+        </select>
+      </div>
+      <div class="ff" style="flex:1; margin-left:12px;" id="pantry-opened-container">
+        <div class="fl">Date Opened</div>
+        <input type="date" id="pantry-opened" />
+      </div>
+    </div>
+    
+    <div class="ff">
+      <div class="fl">Use Within (days after opening)</div>
+      <input type="number" id="pantry-days" min="1" placeholder="e.g. 5" />
+    </div>
+    <div class="ff">
+      <div class="fl">Storage Note</div>
+      <input type="text" id="pantry-notes" placeholder="e.g. Refrigerate after opening" />
+    </div>
+    <div class="row-end" style="display:flex">
+      <button class="btn b-ghost" onclick="closePantryForm()">Cancel</button>
+      <button class="btn b-pri" onclick="savePantryItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg hidden" id="modal-save" onclick="closeSaveModal()">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mtitle">💾 Save Current List</div>
+    <div class="ff">
+      <div class="fl">List Name</div>
+      <input type="text" id="save-list-name" placeholder="e.g. Weekly Shop, Woolies Run…" onkeydown="saveListEnter(event)" />
+    </div>
+    <div class="save-note" id="save-list-note"></div>
+    <div class="row-end" style="display:flex;margin-top:16px">
+      <button class="btn b-ghost" onclick="closeSaveModal()">Cancel</button>
+      <button class="btn b-pri" onclick="confirmSaveList()">Save List</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg hidden" id="modal-load" onclick="closeLoadModal()">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mtitle" id="load-modal-title">Load List</div>
+    <div class="load-warn" id="load-warn-msg"></div>
+    <div class="load-preview" id="load-preview-items"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+      <button class="btn b-pri" style="width:100%;justify-content:center" onclick="doLoadReplace()">↩ Replace current list</button>
+      <button class="btn b-ghost" style="width:100%;justify-content:center" onclick="doLoadMerge()">＋ Merge into current list</button>
+      <button class="btn b-ghost" style="width:100%;justify-content:center;color:#9CA3AF" onclick="closeLoadModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+// ─── Data ────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id:'bakery',   label:'Bakery',                   icon:'🍞', cold:false, order:1  },
+  { id:'pantry',   label:'Pantry & Canned',           icon:'🥫', cold:false, order:2  },
+  { id:'snacks',   label:'Snacks & Sweets',           icon:'🍫', cold:false, order:3  },
+  { id:'produce',  label:'Fresh Produce',             icon:'🍉', cold:false, order:4  },
+  { id:'drinks',   label:'Drinks',                   icon:'🥤', cold:false, order:5  },
+  { id:'meat',     label:'Meat, Poultry & Seafood',  icon:'🥩🐓🐟', cold:true,  order:6  },
+  { id:'deli',     label:'Deli & Cheese',             icon:'🧀', cold:true,  order:7  },
+  { id:'dairy',    label:'Dairy & Eggs',              icon:'🥛', cold:true,  order:8  },
+  { id:'frozen',   label:'Frozen',                   icon:'❄️', cold:true,  order:9  },
+  { id:'other',    label:'Other',                    icon:'🛒', cold:false, order:10 },
+];
+
+function uuid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+// ─── State ────────────────────────────────────────────────────────────
+let items       = []; 
+let pantry      = JSON.parse(localStorage.getItem('ss_pantry')      || '[]');
+let savedLists  = JSON.parse(localStorage.getItem('ss_saved_lists') || '[]');
+let currentTab  = 'shopping';
+let toastTimer  = null;
+let editingItemId  = null;
+let pendingLoadId  = null;   
+
+// ─── Persist ───────────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem('ss_items',       JSON.stringify(items));
+  localStorage.setItem('ss_pantry',      JSON.stringify(pantry));
+  localStorage.setItem('ss_saved_lists', JSON.stringify(savedLists));
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────
+function notify(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (type === 'err' ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+}
+
+// ─── Tab switching ────────────────────────────────────────────────────
+function switchTab(t) {
+  currentTab = t;
+  document.getElementById('pane-shopping').classList.toggle('hidden', t !== 'shopping');
+  document.getElementById('pane-pantry').classList.toggle('hidden',   t !== 'pantry');
+  document.getElementById('pane-saved').classList.toggle('hidden',    t !== 'saved');
+  document.getElementById('tab-shopping').classList.toggle('on', t === 'shopping');
+  document.getElementById('tab-pantry').classList.toggle('on',   t === 'pantry');
+  document.getElementById('tab-saved').classList.toggle('on',    t === 'saved');
+  render();
+}
+
+// ─── Render ────────────────────────────────────────────────────────────
+function render() {
+  renderShopping();
+  renderPantry();
+  renderSavedLists();
+  renderBadges();
+}
+
+function renderShopping() {
+  const checked = items.filter(i => i.checked).length;
+  const pct = items.length ? Math.round(checked / items.length * 100) : 0;
+
+  const metaEl = document.getElementById('list-meta');
+  metaEl.classList.toggle('hidden', items.length === 0);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = `${checked} of ${items.length} collected`;
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('clear-ticked-btn').classList.toggle('hidden', !items.some(i => i.checked));
+
+  const grouped = buildGrouped();
+  document.getElementById('cold-tip').classList.toggle('hidden', !grouped.some(g => g.cold));
+
+  const container = document.getElementById('items-list');
+  container.innerHTML = '';
+
+  if (grouped.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-ico">🛒</div><h3>List is empty</h3></div>`;
+    return;
+  }
+
+  grouped.forEach(g => {
+    const uncheckedInGroup = g.items.filter(i => !i.checked).length;
+    const div = document.createElement('div');
+    div.className = 'cgrp';
+    div.innerHTML = `
+      <div class="chdr">
+        <span class="cico">${g.icon}</span>
+        <span class="cname">${g.label}</span>
+        ${g.cold ? '<span class="ctag">❄ Grab last</span>' : ''}
+        <span style="font-size:12px;color:#7A7268">${uncheckedInGroup}/${g.items.length}</span>
+      </div>
+    `;
+    g.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = `irow ${g.cold ? 'cold' : ''} ${item.checked ? 'done' : ''}`;
+      
+      row.onclick = (e) => {
+        if (e.target.closest('.iactions')) return;
+        toggleItem(item.id);
+      };
+      
+      row.innerHTML = `
+        <div class="chk ${item.checked ? 'on' : ''}">
+          ${item.checked ? `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="1,6 5,10 11,2"/></svg>` : ''}
+        </div>
+        <span class="iname">${escHtml(item.name)}</span>
+        ${item.qty > 1 ? `<span class="iqty">×${item.qty}</span>` : ''}
+        <div class="iactions">
+          <button class="ibtn" onclick="openEditItem('${item.id}')" title="Edit">✏️</button>
+          <button class="ibtn" onclick="removeItem('${item.id}')" title="Delete">×</button>
+        </div>
+      `;
+      div.appendChild(row);
+    });
+    container.appendChild(div);
+  });
+}
+
+function buildGrouped() {
+  return CATEGORIES
+    .slice().sort((a,b) => a.order - b.order)
+    .map(cat => ({ ...cat, items: items.filter(i => i.category === cat.id) }))
+    .filter(g => g.items.length > 0);
+}
+
+// ─── Render saved lists ────────────────────────────────────────────────
+function renderSavedLists() {
+  const container = document.getElementById('saved-lists-container');
+  container.innerHTML = '';
+
+  if (savedLists.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-ico">💾</div>
+        <h3>No saved lists yet</h3>
+        <p>Build a shopping list, then tap <strong>Save List</strong> to store it here for future use.</p>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...savedLists].sort((a,b) => b.savedAt - a.savedAt);
+
+  sorted.forEach(sl => {
+    const card = document.createElement('div');
+    card.className = 'slist-card';
+
+    const usedCats = [...new Set(sl.items.map(i => i.category))];
+    const catPills = usedCats.map(cid => {
+      const cat = CATEGORIES.find(c => c.id === cid) || { icon:'🛒', label:'Other' };
+      const count = sl.items.filter(i => i.category === cid).length;
+      return `<span class="slist-cat">${cat.icon} ${cat.label} <strong style="color:var(--text)">${count}</strong></span>`;
+    }).join('');
+
+    const date = new Date(sl.savedAt);
+    const dateStr = date.toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+    const timeStr = date.toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
+
+    card.innerHTML = `
+      <div class="slist-top">
+        <div>
+          <div class="slist-name">${escHtml(sl.name)}<span class="slist-count">${sl.items.length} item${sl.items.length !== 1 ? 's' : ''}</span></div>
+          <div class="slist-meta">Saved ${dateStr} at ${timeStr}</div>
+        </div>
+        <button class="slist-del" onclick="deleteSavedList('${sl.id}')" title="Delete saved list">×</button>
+      </div>
+      <div class="slist-cats">${catPills}</div>
+      <div class="slist-actions">
+        <button class="btn b-pri b-sm" style="flex:1;justify-content:center" onclick="openLoadModal('${sl.id}')">↩ Load</button>
+        <button class="btn b-ghost b-sm" onclick="loadAndMerge('${sl.id}')">＋ Merge</button>
+        <button class="btn b-ghost b-sm" onclick="shareSavedList('${sl.id}')" title="Copy Link">🔗 Share</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ─── Render pantry ─────────────────────────────────────────────────────
+function renderPantry() {
+  const unopenedItems = pantry.filter(i => i.isOpened === false);
+  const openedItems   = pantry.filter(i => i.isOpened !== false); 
+
+  const expiredItems = openedItems.filter(i => { const d = getDaysLeft(i); return d !== null && d < 0; });
+  const soonItems    = openedItems.filter(i => { const d = getDaysLeft(i); return d !== null && d >= 0 && d <= 3; });
+  const okItems      = openedItems.filter(i => { const d = getDaysLeft(i); return d === null || d > 3; });
+
+  const container = document.getElementById('pantry-list');
+  container.innerHTML = '';
+
+  if (pantry.length === 0) {
+    container.innerHTML = `<div class="empty"><h3>Nothing Tracked</h3><p>Track stockpiles or open items here.</p></div>`;
+    return;
+  }
+
+  if (expiredItems.length) {
+    const hdr = document.createElement('div');
+    hdr.className = 'shdr'; hdr.style.color = '#C62828';
+    hdr.textContent = '⚠️ Expired — needs replacing';
+    container.appendChild(hdr);
+    expiredItems.forEach(i => container.appendChild(buildPantryCard(i)));
+  }
+  if (soonItems.length) {
+    const hdr = document.createElement('div');
+    hdr.className = 'shdr'; hdr.style.color = '#BF5A2E';
+    if (expiredItems.length) hdr.style.marginTop = '20px';
+    hdr.textContent = '🕐 Use soon';
+    container.appendChild(hdr);
+    soonItems.forEach(i => container.appendChild(buildPantryCard(i)));
+  }
+  if (okItems.length) {
+    const hdr = document.createElement('div');
+    hdr.className = 'shdr'; hdr.style.color = '#7A7268';
+    if (expiredItems.length || soonItems.length) hdr.style.marginTop = '20px';
+    hdr.textContent = '✅ Good (Opened)';
+    container.appendChild(hdr);
+    okItems.forEach(i => container.appendChild(buildPantryCard(i)));
+  }
+  if (unopenedItems.length) {
+    const hdr = document.createElement('div');
+    hdr.className = 'shdr'; hdr.style.color = '#3B82F6';
+    if (expiredItems.length || soonItems.length || okItems.length) hdr.style.marginTop = '20px';
+    hdr.textContent = '📦 Unopened (Stockpile)';
+    container.appendChild(hdr);
+    unopenedItems.forEach(i => container.appendChild(buildPantryCard(i)));
+  }
+}
+
+function buildPantryCard(item) {
+  const isUnopened = item.isOpened === false;
+  const daysLeft = getDaysLeft(item);
+  const isExp  = !isUnopened && daysLeft !== null && daysLeft < 0;
+  const isWarn = !isUnopened && daysLeft !== null && daysLeft >= 0 && daysLeft <= 3;
+
+  const fmtDate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' }) : null;
+  const expiryDate = () => {
+    if (isUnopened || !item.openedDate || !item.useWithinDays) return null;
+    const exp = new Date(new Date(item.openedDate + 'T00:00:00').getTime() + item.useWithinDays * 86400000);
+    return exp.toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+  };
+  const statusLabel = () => {
+    if (isUnopened) return '📦 Stockpile (Not counting down)';
+    if (daysLeft === null) return null;
+    if (isExp) return `⚠️ Expired ${Math.abs(daysLeft)} day${Math.abs(daysLeft) !== 1 ? 's' : ''} ago`;
+    if (daysLeft === 0) return '⚠️ Expires today';
+    if (daysLeft === 1) return '⏰ 1 day left';
+    return `✓ ${daysLeft} days left`;
+  };
+
+  const card = document.createElement('div');
+  card.className = `pcard ${isExp ? 'exp' : isWarn ? 'warn' : isUnopened ? 'unopened' : ''}`;
+
+  const expDate = expiryDate();
+  const status  = statusLabel();
+
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div class="pname">${escHtml(item.name)}</div>
+      <button onclick="removePantryItem('${item.id}')" style="background:none;border:none;cursor:pointer;font-size:20px;color:#999;line-height:1;font-family:sans-serif">×</button>
+    </div>
+    <div class="pmeta">
+      ${item.openedDate && !isUnopened ? `<div>📅 Opened: ${fmtDate(item.openedDate)}</div>` : ''}
+      ${item.useWithinDays ? `<div>⏱ Use within ${item.useWithinDays} days of opening</div>` : ''}
+      ${expDate            ? `<div>🗓 Expires: ${expDate}</div>` : ''}
+      ${item.notes         ? `<div>📌 ${escHtml(item.notes)}</div>` : ''}
+    </div>
+    ${status ? `<span class="pstatus ${isExp ? 's-exp' : isWarn ? 's-warn' : isUnopened ? '' : 's-ok'}" style="background:${isUnopened ? '#E5E7EB' : ''}; color:${isUnopened ? '#4B5563' : ''}">${status}</span>` : ''}
+    
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      ${(isExp || isWarn) ? `<button class="padd" style="background:${isExp ? '#FFEBEE' : '#FFF8E1'};border-color:${isExp ? '#FFCDD2' : '#FFE082'};color:${isExp ? '#C62828' : '#E65100'}; margin-top:8px; padding:4px 8px; font-size:12px; border-radius:4px;" onclick="pushToList('${escAttr(item.name)}')">Add to shopping list</button>` : ''}
+      ${isUnopened ? `<button class="padd" style="background:#EAF2FF;border-color:#BFDBFE;color:#1D4ED8; margin-top:8px; padding:4px 8px; font-size:12px; border-radius:4px;" onclick="markAsOpened('${item.id}')">📦 Mark as Opened Today</button>` : ''}
+    </div>
+  `;
+  return card;
+}
+
+function renderBadges() {
+  const unchecked = items.filter(i => !i.checked).length;
+  const badge = document.getElementById('unchecked-badge');
+  if (unchecked > 0) { badge.textContent = unchecked; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+
+  const openedItems = pantry.filter(i => i.isOpened !== false);
+  const expiredCount = openedItems.filter(i => { const d = getDaysLeft(i); return d !== null && d < 0; }).length;
+  const soonCount    = openedItems.filter(i => { const d = getDaysLeft(i); return d !== null && d >= 0 && d <= 3; }).length;
+  
+  const expBadge  = document.getElementById('pantry-exp-badge');
+  const soonBadge = document.getElementById('pantry-soon-badge');
+  if (expiredCount) { expBadge.textContent = expiredCount; expBadge.classList.remove('hidden'); soonBadge.classList.add('hidden'); }
+  else if (soonCount) { soonBadge.textContent = soonCount; soonBadge.classList.remove('hidden'); expBadge.classList.add('hidden'); }
+  else { expBadge.classList.add('hidden'); soonBadge.classList.add('hidden'); }
+
+  const savedBadge = document.getElementById('saved-badge');
+  if (savedLists.length > 0) { savedBadge.textContent = savedLists.length; savedBadge.classList.remove('hidden'); }
+  else savedBadge.classList.add('hidden');
+}
+
+// ─── Shopping actions ──────────────────────────────────────────────────
+function toggleItem(id) {
+  items = items.map(i => i.id === id ? { ...i, checked: !i.checked } : i);
+  save(); render();
+}
+
+function removeItem(id) {
+  items = items.filter(i => i.id !== id);
+  save(); render();
+}
+
+const STAPLES = ['Milk', 'Eggs', 'Bread', 'Fruits', 'Snacks', 'Bananas', 'Yoghurt', 'Flour'];
+
+function initQuickChips() {
+  const container = document.getElementById('quick-chips');
+  if (!container) return;
+  const inList = new Set(items.map(i => i.name.toLowerCase()));
+  const available = STAPLES.filter(s => !inList.has(s.toLowerCase()));
+  container.innerHTML = available.map(item => 
+    `<button class="qchip" onclick="addQuickStaple('${item}', this)">+ ${item}</button>`
+  ).join('');
+}
+
+function addQuickStaple(item, element) {
+  parseAndAddItems(item);
+  if (element) {
+    element.remove();
+  }
+}
+
+function clearChecked() {
+  items = items.filter(i => !i.checked);
+  save(); render();
+  initQuickChips();
+  notify('Ticked items removed');
+}
+
+function confirmClearStart() {
+  const area = document.getElementById('clear-area');
+  area.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:13px;color:#7A7268">Clear everything?</span>
+      <button class="btn b-sm" style="background:#EF4444;color:#fff;border-radius:100px" onclick="clearAll()">Yes, clear all</button>
+      <button class="btn b-ghost b-sm" onclick="cancelClear()">Cancel</button>
+    </div>`;
+}
+
+function clearAll() {
+  items = [];
+  save(); 
+  initQuickChips(); 
+  render();
+  notify('Shopping list cleared');
+  cancelClear();
+}
+
+function cancelClear() {
+  document.getElementById('clear-area').innerHTML = `<button class="btn b-ghost b-sm" onclick="confirmClearStart()">🗑 Clear list</button>`;
+}
+
+// ─── Save List ─────────────────────────────────────────────────────────
+function openSaveModal() {
+  if (items.length === 0) { notify('Add some items first', 'err'); return; }
+
+  const now = new Date();
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const suggestion = `${dayNames[now.getDay()]} Shop`;
+  document.getElementById('save-list-name').value = suggestion;
+  document.getElementById('save-list-note').textContent =
+    `${items.length} item${items.length !== 1 ? 's' : ''} will be saved. Check marks are not saved — all items will be unticked when loaded.`;
+
+  document.getElementById('modal-save').classList.remove('hidden');
+  setTimeout(() => {
+    const el = document.getElementById('save-list-name');
+    el.focus();
+    el.select();
+  }, 80);
+}
+
+// ─── Load List ─────────────────────────────────────────────────────────
+function closeSaveModal() { document.getElementById('modal-save').classList.add('hidden'); }
+function saveListEnter(e) { if (e.key === 'Enter') confirmSaveList(); }
+
+function confirmSaveList() {
+  const name = document.getElementById('save-list-name').value.trim();
+  if (!name) return;
+
+  const cleanItems = items.map(i => ({ ...i, checked: false, id: uuid() }));
+  const entry = { id: uuid(), name, savedAt: Date.now(), items: cleanItems };
+
+  savedLists.push(entry);
+  save(); renderBadges(); renderSavedLists(); closeSaveModal();
+  notify(`✓ "${name}" saved`);
+}
+
+function openLoadModal(savedId) {
+  const sl = savedLists.find(s => s.id === savedId);
+  if (!sl) return;
+
+  pendingLoadId = savedId;
+  document.getElementById('load-modal-title').textContent = `Load "${escHtml(sl.name)}"`;
+
+  const warnEl = document.getElementById('load-warn-msg');
+  if (items.length > 0) {
+    warnEl.textContent = `You have ${items.length} item${items.length !== 1 ? 's' : ''} in your current list. Replace it or merge the saved list in.`;
+    warnEl.classList.remove('hidden');
+  } else { warnEl.classList.add('hidden'); }
+
+  const preview = sl.items.slice(0, 20).map(i => `• ${escHtml(i.name)}`).join('\n');
+  const more = sl.items.length > 20 ? `\n…and ${sl.items.length - 20} more items` : '';
+  document.getElementById('load-preview-items').textContent = preview + more;
+
+  document.getElementById('modal-load').classList.remove('hidden');
+}
+
+function closeLoadModal() {
+  document.getElementById('modal-load').classList.add('hidden');
+  pendingLoadId = null;
+}
+
+function doLoadReplace() {
+  if (!pendingLoadId) return;
+  const sl = savedLists.find(s => s.id === pendingLoadId);
+  if (!sl) return;
+
+  items = sl.items.map(i => ({ ...i, id: uuid(), checked: false }));
+  save(); render(); closeLoadModal(); switchTab('shopping');
+  notify(`✓ "${sl.name}" loaded`);
+}
+
+function doLoadMerge() {
+  if (!pendingLoadId) return;
+  loadAndMerge(pendingLoadId);
+  closeLoadModal();
+}
+
+function loadAndMerge(savedId) {
+  const sl = savedLists.find(s => s.id === savedId);
+  if (!sl) return;
+
+  const existing = new Set(items.map(i => i.name.toLowerCase()));
+  const newItems = sl.items
+    .filter(i => !existing.has(i.name.toLowerCase()))
+    .map(i => ({ ...i, id: uuid(), checked: false }));
+
+  items.push(...newItems);
+  save(); render(); switchTab('shopping');
+  notify(`✓ ${newItems.length} new item${newItems.length !== 1 ? 's' : ''} merged from "${sl.name}"`);
+}
+
+function deleteSavedList(savedId) {
+  savedLists = savedLists.filter(s => s.id !== savedId);
+  save(); renderSavedLists(); renderBadges();
+  notify('Saved list deleted');
+}
+
+// ─── Manual modal ──────────────────────────────────────────────────────
+function openManual() {
+  document.getElementById('manual-name').value = '';
+  document.getElementById('manual-qty').value  = 1;
+  document.getElementById('modal-manual').classList.remove('hidden');
+  setTimeout(() => {
+    const el = document.getElementById('manual-name');
+    el.focus(); el.select();
+  }, 80);
+}
+
+function closeManual() { document.getElementById('modal-manual').classList.add('hidden'); }
+function manualEnter(e) { if (e.key === 'Enter' && document.getElementById('manual-name').value.trim()) addManual(); }
+
+function addManual() {
+  const name = document.getElementById('manual-name').value.trim();
+  if (!name) return;
+  const cat = document.getElementById('manual-cat').value;
+  const qty = parseInt(document.getElementById('manual-qty').value) || 1;
+  items.push({ id: uuid(), name, category: cat, qty, checked: false });
+  save(); render(); closeManual();
+}
+
+// ─── Edit item modal ───────────────────────────────────────────────────
+function openEditItem(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  editingItemId = id;
+  document.getElementById('edit-name').value = item.name;
+  document.getElementById('edit-qty').value  = item.qty;
+  document.getElementById('edit-cat').value  = item.category;
+  document.getElementById('modal-edit').classList.remove('hidden');
+  setTimeout(() => document.getElementById('edit-name').focus(), 50);
+}
+
+// ─── Pantry modal & logic ─────────────────────────────────────────────
+function closeEditItem() {
+  document.getElementById('modal-edit').classList.add('hidden');
+  editingItemId = null;
+}
+
+function saveEditedItem() {
+  if (!editingItemId) return;
+  const name = document.getElementById('edit-name').value.trim();
+  if (!name) return;
+  const cat = document.getElementById('edit-cat').value;
+  const qty = parseInt(document.getElementById('edit-qty').value) || 1;
+  items = items.map(i => i.id === editingItemId ? { ...i, name, category: cat, qty } : i);
+  save(); render(); closeEditItem();
+  notify('✓ Item updated');
+}
+
+function togglePantryOpenedDate(val) {
+  const container = document.getElementById('pantry-opened-container');
+  if (val === 'unopened') {
+    container.style.opacity = '0.4';
+    container.style.pointerEvents = 'none';
+    document.getElementById('pantry-opened').value = '';
+  } else {
+    container.style.opacity = '1';
+    container.style.pointerEvents = 'auto';
+    if (!document.getElementById('pantry-opened').value) {
+      document.getElementById('pantry-opened').value = new Date().toISOString().split('T')[0];
+    }
+  }
+}
+
+function openPantryForm(prefill = {}) {
+  const currentDate = new Date().toISOString().split('T')[0];
+  document.getElementById('pantry-modal-title').textContent = 'Track Pantry Item';
+  document.getElementById('pantry-name').value   = prefill.name   || '';
+  document.getElementById('pantry-days').value   = prefill.days   || '';
+  document.getElementById('pantry-notes').value  = prefill.notes  || '';
+  
+  document.getElementById('pantry-status').value = prefill.isOpened === false ? 'unopened' : 'opened';
+  togglePantryOpenedDate(document.getElementById('pantry-status').value);
+  if (prefill.opened) {
+    document.getElementById('pantry-opened').value = prefill.opened;
+  }
+  document.getElementById('pantry-opened').max = currentDate;
+  
+  document.getElementById('modal-pantry').classList.remove('hidden');
+}
+
+function closePantryForm() { document.getElementById('modal-pantry').classList.add('hidden'); }
+
+function savePantryItem() {
+  const name = document.getElementById('pantry-name').value.trim();
+  if (!name) return;
+  
+  pantry.push({
+    id: uuid(),
+    name,
+    isOpened:      document.getElementById('pantry-status').value === 'opened',
+    openedDate:    document.getElementById('pantry-status').value === 'opened' ? document.getElementById('pantry-opened').value : null,
+    useWithinDays: document.getElementById('pantry-days').value ? Number(document.getElementById('pantry-days').value) : null,
+    notes:         document.getElementById('pantry-notes').value,
+  });
+  
+  save(); render(); closePantryForm();
+  notify('✓ Pantry item saved');
+}
+
+function markAsOpened(id) {
+  const today = new Date().toISOString().split('T')[0];
+  pantry = pantry.map(i => i.id === id ? { ...i, isOpened: true, openedDate: today } : i);
+  save(); render();
+  notify('📦 Marked as opened today');
+}
+
+function removePantryItem(id) { pantry = pantry.filter(i => i.id !== id); save(); render(); }
+
+function pushToList(name) {
+  items.push({ id: uuid(), name, category: 'pantry', qty: 1, checked: false });
+  save(); switchTab('shopping');
+  notify(`✓ ${name} added to shopping list`);
+}
+
+function getDaysLeft(item) {
+  if (item.isOpened === false) return null; 
+  if (!item.openedDate || !item.useWithinDays) return null;
+  const exp = new Date(item.openedDate + 'T00:00:00').getTime() + item.useWithinDays * 86400000;
+  return Math.ceil((exp - Date.now()) / 86400000);
+}
+
+// ─── AI: parse shopping text ───────────────────────────────────────────
+
+function parseAndAddItems(inputText) {
+  if (!inputText) return;
+
+  const keywords = {
+    dairy: ['greek yogurt','cream cheese','sour cream','thickened cream','whipping cream','custard','mozzarella','parmesan','ricotta','halloumi','feta','cheddar','tasty cheese','goat cheese','milk','cheese','yogurt','yoghurt','butter','cream','eggs','dairy','lactose','yakult','activia','vaalia','chobani','dairy farmers','bega','a2 milk','oat milk','almond milk','soy milk','lactose free milk'],
+    meat: ['chicken breast','chicken thigh','beef mince','lamb chops','pork belly','beef sausages','burger patties','chicken wings','drumsticks','beef steak','rib eye','scotch fillet','salmon fillet','tuna steaks','fish fillets','chicken','beef','pork','fish','mince','prawns','steak','lamb','turkey','sausages','salmon','tuna','bacon','meatballs','kebab','kafta','shawarma','veal','prosciutto','pepperoni','ham slices'],
+    produce: ['fruits','sweet potato','spring onion','green onion','baby spinach','iceberg lettuce','cos lettuce','red onion','brown onion','cherry tomatoes','fresh herbs','fresh parsley','fresh mint','apple','banana','lettuce','tomato','carrot','onion','potato','broccoli','capsicum','pepper','cucumber','berries','strawberries','blueberries','raspberries','spinach','rocket','mint','parsley','coriander','garlic','ginger','avocado','lemons','limes','oranges','grapes','mushrooms','zucchini','eggplant','herbs','celery','watermelon','melon','pear','kiwi','mango','pineapple','beetroot','cabbage','cauliflower'],
+    pantry: ['tomato paste','pasta sauce','cooking sauce','soy sauce','bbq sauce','hot sauce','chilli sauce','olive oil','vegetable oil','sesame oil','instant noodles','2 minute noodles','baked beans','kidney beans','black beans','canned tomatoes','crushed tomatoes','peanut butter','almond butter','coffee beans','tea bags','plain flour','brown sugar','caster sugar','breadcrumbs','stock cubes','zaatar','molasses','tahini','pasta','rice','sauce','canned','cereal','oil','spices','flour','sugar','salt','pepper','vinegar','tuna can','beans','lentils','chickpeas','stock','passata','noodles','oats','honey','jam','nutella','coffee','tea','weet bix','nutri grain','milo','vegemite','promite','uncle tobys','maggi','continental','masterfoods'],
+    frozen: ['frozen pizza','frozen vegetables','frozen berries','frozen meals','ice cream tub','ice cream cones','hash browns','potato gems','frozen chips','frozen nuggets','frozen chicken','dimsims','dim sims','ice cream','frozen','pizza','nuggets','frozen veg','zooper dooper','drumstick ice cream','connoisseur','ben and jerrys'],
+    bakery: ['burger buns','hot dog buns','lebanese bread','sourdough bread','garlic bread','english muffins','wrap bread','croissants','flatbread','bread','rolls','pastries','wraps','sourdough','bagels','muffins','pita','tortillas','naan','toast bread','crumpets','donuts','doughnuts','tip top','helgas','wonder white'],
+    snacks: ['snacks','protein bars','muesli bars','corn chips','potato chips','party mix','gummy bears','tim tams','oreo','shapes','pringles','doritos','twisties','cheezels','pods','maltesers','snickers','mars bar','kitkat','chips','lollies','chocolate','candy','biscuits','cookies','nuts','popcorn','crackers','pretzels','ice blocks','smiths','kettle chips','ccs'],
+    drinks: ['sparkling water','mineral water','soft drink','energy drink','iced coffee','iced tea','orange juice','apple juice','coconut water','sports drink','red bull','monster','gatorade','powerade','kombucha','juice','water','coke','sprite','fanta','pepsi','coffee drink','tea drink','drink','drinks','mount franklin','pump water','v energy','lipton'],
+    deli: ['turkey slices','deli chicken','cold meats','sliced ham','marinated olives','sun dried tomatoes','hummus dip','tzatziki dip','labneh','pickles','olives','dip','hummus','tzatziki','salami','prosciutto','pepperoni','kabana'],
+    other: []
+  };
+
+  const rawItems = inputText.split(/[,;\n]| and /i).map(s => s.trim()).filter(Boolean);
+
+  const parsedItems = rawItems.map(raw => {
+    let working = raw.toLowerCase();
+    let qty = 1;
+    const qtyPatterns = [/x\s?(\d+)/i, /(\d+)\s?x/i, /qty\s?(\d+)/i, /pack\s?of\s?(\d+)/i];
+    qtyPatterns.forEach(p => {
+      const match = working.match(p); if (match) qty = parseInt(match[1]) || 1;
+    });
+    working = working.replace(/x\s?\d+/gi,'').replace(/\d+\s?x/gi,'').replace(/qty\s?\d+/gi,'').replace(/pack\s?of\s?\d+/gi,'').trim();
+
+    let category = 'other'; const allMatches = [];
+    for (const [cat, kws] of Object.entries(keywords)) {
+      kws.forEach(kw => { if (working.includes(kw)) allMatches.push({ category: cat, keyword: kw, length: kw.length }); });
+    }
+    if (allMatches.length > 0) { allMatches.sort((a, b) => b.length - a.length); category = allMatches[0].category; }
+    const cleanName = working.replace(/\s+/g,' ').trim().replace(/\b\w/g, c => c.toUpperCase());
+    return { id: uuid(), name: cleanName, category, qty, checked: false };
+  }).filter(i => i.name);
+
+  parsedItems.forEach(newItem => {
+    const existingItemIndex = items.findIndex(i => i.name.toLowerCase() === newItem.name.toLowerCase());
+    if (existingItemIndex > -1) { items[existingItemIndex].qty += newItem.qty; items[existingItemIndex].checked = false; }
+    else { items.push(newItem); }
+  });
+
+  save(); render();
+  notify(`✓ ${parsedItems.length} item${parsedItems.length !== 1 ? 's' : ''} added`);
+}
+
+function parseItems() {
+  const inputEl = document.getElementById('input-text');
+  const inputText = inputEl.value.trim();
+  if (!inputText) return;
+  
+  parseAndAddItems(inputText);
+  inputEl.value = ''; 
+}
+
+// ─── Share ────────────────────────────────────────────────────────────
+function shareSavedList(savedId) {
+  const sl = savedLists.find(s => s.id === savedId);
+  if (!sl) return;
+  const listData = btoa(JSON.stringify(sl.items));
+  const url = `${window.location.origin}${window.location.pathname}?list=${listData}`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => notify('✓ Share link copied')).catch(() => notify('Could not copy', 'err'));
+  } else { notify('Copy not supported on this device', 'err'); }
+}
+
+function loadSharedList() {
+  const params = new URLSearchParams(window.location.search);
+  const listData = params.get('list');
+  if (listData) {
+    try {
+      const sharedItems = JSON.parse(atob(listData));
+      if (Array.isArray(sharedItems) && sharedItems.length > 0) { items = sharedItems; save(); render(); notify('✓ Shared list loaded'); }
+    } catch(e) { console.error('Failed to load shared list:', e); }
+  }
+}
+
+document.getElementById('input-text').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) parseItems();
+});
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return escHtml(s); }
+
+(function initCategorySelect() {
+  const sels = [document.getElementById('manual-cat'), document.getElementById('edit-cat')];
+  sels.forEach(sel => {
+    sel.innerHTML = '';
+    CATEGORIES.forEach(c => {
+      const opt = document.createElement('option'); opt.value = c.id; opt.textContent = `${c.icon} ${c.label}`; sel.appendChild(opt);
+    });
+    sel.value = 'other';
+  });
+})();
+
+initQuickChips(); loadSharedList(); render();
+</script>
+</body>
+</html>
