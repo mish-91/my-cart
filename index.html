@@ -882,19 +882,6 @@ initQuickChips(); loadSharedList(); render();
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  // Logout logic
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      signOut(auth).then(() => {
-        // Redirect back to the login page (index.html)
-        window.location.href = 'index.html';
-      }).catch((error) => {
-        console.error("Logout failed:", error);
-        if(window.notify) window.notify('Could not log out', 'err');
-      });
-    });
-  }
 </script>
 </body>
 </html>
