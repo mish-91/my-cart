@@ -221,7 +221,7 @@ const CATEGORIES = [
 
 function uuid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
-let items       = []; 
+let items       = JSON.parse(localStorage.getItem('ss_items')       || '[]'); 
 let pantry      = JSON.parse(localStorage.getItem('ss_pantry')      || '[]');
 let savedLists  = JSON.parse(localStorage.getItem('ss_saved_lists') || '[]');
 let currentTab  = 'shopping';
